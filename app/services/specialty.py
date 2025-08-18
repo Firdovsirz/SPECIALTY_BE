@@ -61,7 +61,7 @@ async def add_specialty(
             .where(Specialty.specialty_name == specialty_details.specialty_name)
         )
 
-        if exists_specialty_code or exists_specialty_name:
+        if exists_specialty_code.scalar_one_or_none() or exists_specialty_name.scalar_one_or_none():
             return JSONResponse(
                 content={
                     "statusCode": 409,
