@@ -1,14 +1,21 @@
 from fastapi import FastAPI
 from dotenv import load_dotenv
 from fastapi.middleware.cors import CORSMiddleware
+
+load_dotenv()
+
+import os
+
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise ValueError("DATABASE_URL environment variable is not set.")
+
 from app.api.v1.routes.faculty import router as faculty_routes
 from app.api.v1.routes.cafedra import router as cafedra_routes
 from app.api.v1.routes.specialty import router as specialty_routes
 from app.api.v1.routes.university import router as university_routes
 
 app = FastAPI()
-
-load_dotenv()
 
 app.add_middleware(
     CORSMiddleware,
@@ -35,9 +42,8 @@ def read_root():
 
 # security = HTTPBasic()
 
-# # Hardcoded credentials (use env vars or hashing in production)
-# USERNAME = "admin"
-# PASSWORD = "secret123"
+# USERNAME = os.getenv("SWAGGER_USERNAME")
+# PASSWORD = os.getenv("SWAGGER_PASSWORD")
 
 # def verify_credentials(credentials: HTTPBasicCredentials = Depends(security)):
 #     correct_username = credentials.username == USERNAME
@@ -49,13 +55,9 @@ def read_root():
 #             headers={"WWW-Authenticate": "Basic"},
 #         )
 
-# # Swagger UI (protected)
-
 # @app.get("/docs", include_in_schema=False)
 # def get_swagger_documentation(credentials: HTTPBasicCredentials = Depends(verify_credentials)):
 #     return get_swagger_ui_html(openapi_url="/openapi.json", title="Secure API Docs")
-
-# # ReDoc (protected)
 
 # @app.get("/redoc", include_in_schema=False)
 # def get_redoc_documentation(credentials: HTTPBasicCredentials = Depends(verify_credentials)):
