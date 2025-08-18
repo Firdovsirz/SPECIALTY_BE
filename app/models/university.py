@@ -7,13 +7,14 @@ from sqlalchemy import (
     Boolean
 )
 from app.db.database import Base
+from sqlalchemy.orm import relationship
 
 class University(Base):
     __tablename__ = "universities"
     __table_args__ = (
         UniqueConstraint("university_code"),
         UniqueConstraint("university_name"),
-        UniqueConstraint("university_short_name")
+        UniqueConstraint("university_short_name"),
     )
 
     id = Column(Integer, index=True, primary_key=True)
@@ -25,3 +26,7 @@ class University(Base):
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=True)
     deleted_at = Column(DateTime, nullable=True)
+
+    faculties = relationship("Faculty", back_populates="university")
+    cafedras = relationship("Cafedra", back_populates="university")
+    specialties = relationship("Specialty", back_populates="university")

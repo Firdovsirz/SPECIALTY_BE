@@ -1,28 +1,32 @@
 from app.db.session import get_db
-from sqlalchemy.orm import Session
-from app.services.university import *
 from fastapi import APIRouter, Depends, Query
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.schemas.university import CreateUniversity
+from app.services.university import get_universities, get_university, add_university, delete_university
 
 router = APIRouter()
 
+@router.get("/universities")
+async def get_unis_endpoint(db: AsyncSession = Depends(get_db)):
+    return await get_universities(db)
+
 @router.get("/university")
-def get_university_endpoint(
+async def get_university_endpoint(
     university_code: str = Query(...),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
-    return get_university(university_code, db)
+    return await get_university(university_code, db)
 
 @router.post("/university")
-def create_university_endpoint(
+async def create_university_endpoint(
     university_details: CreateUniversity,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
-    return add_university(university_details, db)
+    return await add_university(university_details, db)
 
 @router.delete("/university")
-def delete_university_endpoint(
+async def delete_university_endpoint(
     university_code: str = Query(...),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
-    return delete_university(university_code, db)
+    return await delete_university(university_code, db)

@@ -1,4 +1,4 @@
-#!/home/ubinutu/Desktop/SPECIALTY_BE/venv/bin/python3
+#!/Users/firdovsirzaev/Desktop/active-projects/specialties/SPECIALTY_BE/venv/bin/python3.13
 # -*- coding: utf-8 -*-
 import re
 import sys
