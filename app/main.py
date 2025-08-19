@@ -10,6 +10,7 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 if not DATABASE_URL:
     raise ValueError("DATABASE_URL environment variable is not set.")
 
+from app.api.v1.routes.auth import router as auth_router
 from app.api.v1.routes.faculty import router as faculty_routes
 from app.api.v1.routes.cafedra import router as cafedra_routes
 from app.api.v1.routes.specialty import router as specialty_routes
@@ -25,6 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth_router, prefix="/auth", tags=['Auth'])
 app.include_router(faculty_routes, prefix="/api", tags=['Faculty'])
 app.include_router(cafedra_routes, prefix="/api", tags=['Cafedra'])
 app.include_router(university_routes, prefix="/api", tags=['University'])

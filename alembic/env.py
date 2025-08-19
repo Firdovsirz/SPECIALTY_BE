@@ -1,7 +1,13 @@
 from logging.config import fileConfig
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
 
 from app.db.database import Base
 from app.models import auth, cafedra, faculty, university, speciality
+from app.models.auth import Auth
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool

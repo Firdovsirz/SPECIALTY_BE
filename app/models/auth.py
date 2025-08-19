@@ -4,9 +4,11 @@ from sqlalchemy import (
     Column,
     UniqueConstraint,
     Boolean,
-    DateTime
+    DateTime,
+    ForeignKey
 )
 from app.db.database import Base
+from sqlalchemy.orm import relationship
 
 class Auth(Base):
     __tablename__ = "auth"
@@ -15,10 +17,17 @@ class Auth(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True)
+    univesity_code = Column(String, ForeignKey("universities.university_code"), nullable=False)
     fin_kod = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=False)
     role = Column(Integer, nullable=False)
+    # 1 - admin / dev
+    # 2 - kafedra mudiri
     otp = Column(Integer)
     approved = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime)
+    otp_expires_at = Column(DateTime)
+    otp_validated = Column(Boolean, nullable=False, default=False)
+
+    university = relationship("University", back_populates="auth")
