@@ -26,4 +26,6 @@ class Specialty(Base):
     deleted_at = Column(DateTime)
 
     university = relationship("University", back_populates="specialties")
-    cafedra = relationship("Cafedra", back_populates="specialties")
+    cafedra = relationship("Cafedra", back_populates="specialties") 
+    plos = relationship("Plo", back_populates="specialty")
+    slos = relationship("Slo", back_populates="specialty")

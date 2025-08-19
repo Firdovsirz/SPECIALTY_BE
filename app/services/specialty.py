@@ -51,12 +51,12 @@ async def add_specialty(
     db: AsyncSession = Depends(get_db)
 ):
     try:
-        exists_specialty_code = db.execute(
+        exists_specialty_code = await db.execute(
             select(Specialty)
             .where(Specialty.specialty_code == specialty_details.specialty_code)
         )
 
-        exists_specialty_name = db.execute(
+        exists_specialty_name = await db.execute(
             select(Specialty)
             .where(Specialty.specialty_name == specialty_details.specialty_name)
         )

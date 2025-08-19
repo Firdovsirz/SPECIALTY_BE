@@ -1,12 +1,17 @@
 from logging.config import fileConfig
+from dotenv import load_dotenv
+import os
 
 from app.db.database import Base
-from app.models import auth, cafedra, faculty, university, speciality
+from app.models import auth, cafedra, faculty, university, speciality, plo, plo_translations
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
 from alembic import context
+
+load_dotenv()
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -41,7 +46,7 @@ def run_migrations_offline() -> None:
     script output.
 
     """
-    url = config.get_main_option("sqlalchemy.url")
+    url = config.get_main_option("sqlalchemy.url", DATABASE_URL)
     context.configure(
         url=url,
         target_metadata=target_metadata,
