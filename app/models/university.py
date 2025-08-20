@@ -33,3 +33,4 @@ class University(Base):
     specialties = relationship("Specialty", back_populates="university")
     plos = relationship("Plo", back_populates="university")
     slos = relationship("Slo", back_populates="university")
+    auth = relationship("Auth", back_populates="university")
