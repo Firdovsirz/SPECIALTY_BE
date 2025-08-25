@@ -29,3 +29,4 @@ class Specialty(Base):
     cafedra = relationship("Cafedra", back_populates="specialties") 
     plos = relationship("Plo", back_populates="specialty")
     slos = relationship("Slo", back_populates="specialty")
+    gco = relationship("GCO", back_populates="specialty") # Graduate Career Opportunities
