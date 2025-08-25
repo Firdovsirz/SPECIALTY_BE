@@ -19,6 +19,7 @@ from app.api.v1.routes.plo import router as plo_router
 from app.api.v1.routes.slo import router as slo_router
 from app.api.v1.routes.gco import router as gco_router
 from app.api.v1.routes.competency import router as competency_router
+from app.api.v1.routes.specialty_characteristics import router as specialty_characteristics_router
 
 app = FastAPI()
 
@@ -39,6 +40,7 @@ app.include_router(slo_router, prefix="/api", tags=['SLO'])
 app.include_router(plo_router, prefix="/api", tags=['PLO'])
 app.include_router(gco_router, prefix="/api", tags=['GCO'])
 app.include_router(competency_router, prefix="/api", tags=['Competency'])
+app.include_router(specialty_characteristics_router, prefix="/api", tags=['Specialty_Characteristics'])
 
 @app.get("/")
 def read_root():
