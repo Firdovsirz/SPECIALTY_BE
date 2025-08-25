@@ -30,7 +30,7 @@ async def update_gco(career_code: str, gco_data: GCOUpdate, lang: str = Depends(
     return await gco_service.update_gco(db=db, career_code=career_code, gco_data=gco_data, lang=lang)
 
 # DELETE GCO
-@router.delete("/gco/career_code")
+@router.delete("/gco/{career_code}")
 async def delete_gco(career_code: str, db: AsyncSession = Depends(get_db)):
     return await gco_service.delete_gco(db=db, career_code=career_code)
 

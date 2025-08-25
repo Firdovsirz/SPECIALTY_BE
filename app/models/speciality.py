@@ -30,3 +30,7 @@ class Specialty(Base):
     plos = relationship("Plo", back_populates="specialty")
     slos = relationship("Slo", back_populates="specialty")
     gco = relationship("GCO", back_populates="specialty") # Graduate Career Opportunities
+    competency = relationship("Competency", back_populates="specialty") 
+
+
+    

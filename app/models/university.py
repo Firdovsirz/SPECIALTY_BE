@@ -35,3 +35,4 @@ class University(Base):
     slos = relationship("Slo", back_populates="university")
     auth = relationship("Auth", back_populates="university")
     gco = relationship("GCO", back_populates="university") # Graduate Career Opportunities
+    competency = relationship("Competency", back_populates="university") 

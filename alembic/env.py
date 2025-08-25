@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 
 from app.db.database import Base
-from app.models import auth, cafedra, faculty, university, speciality, plo, plo_translations, slo_translations, slo, gco, gco_translations
+from app.models import auth, cafedra, faculty, university, speciality, plo, plo_translations, slo_translations, slo, gco, gco_translations, competency, competency_tranlation
 
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
