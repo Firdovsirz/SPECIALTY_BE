@@ -64,9 +64,9 @@ async def add_specialty(
             .where(Specialty.specialty_code == specialty_details.specialty_code)
         )
 
-        exists_specialty_name = await db.execute(
-            select(SpecialtyTranslations)
-            .where(SpecialtyTranslations.specialty_name == specialty_details.specialty_name)
+        exists_specialty_name = db.execute(
+            select(Specialty)
+            .where(Specialty.specialty_name == specialty_details.specialty_name)
         )
 
         if exists_specialty_code.scalar_one_or_none() or exists_specialty_name.scalar_one_or_none():

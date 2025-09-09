@@ -1,3 +1,4 @@
+# university model
 from sqlalchemy import (
     Integer,
     String,
@@ -29,3 +30,4 @@ class University(Base):
 
     faculties = relationship("Faculty", back_populates="university")
     cafedras = relationship("Cafedra", back_populates="university")
+    specialties = relationship("Specialty", back_populates="university")

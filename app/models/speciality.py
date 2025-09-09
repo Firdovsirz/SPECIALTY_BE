@@ -21,5 +21,5 @@ class Specialty(Base):
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime)
 
+    university = relationship("University", back_populates="specialties")
     cafedra = relationship("Cafedra", back_populates="specialties")
-    specialty_translations = relationship("SpecialtyTranslations", back_populates="specialty")
