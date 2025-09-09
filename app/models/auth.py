@@ -23,11 +23,10 @@ class Auth(Base):
     role = Column(Integer, nullable=False)
     # 1 - admin / dev
     # 2 - kafedra mudiri
-    otp = Column(Integer)
     approved = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime)
-    otp_expires_at = Column(DateTime)
     otp_validated = Column(Boolean, nullable=False, default=False)
 
-    university = relationship("University", back_populates="auth")
+    # university = relationship("University", back_populates="university")
+    # otp = relationship("Otp", back_populates="auth", uselist=False)

@@ -1,5 +1,6 @@
 import random
 from sqlalchemy import select
+from app.models.otp import Otp
 from app.models.auth import Auth
 from app.db.session import get_db
 from fastapi import Depends, status
@@ -22,6 +23,7 @@ async def signup(
     try:
         fetched_exist_user = await db.execute(
             select(Auth)
+            .join(Auth.otp)
             .where(Auth.fin_kod == user.fin_kod)
         )
 
@@ -46,17 +48,23 @@ async def signup(
             fin_kod = user.fin_kod,
             password = hashed_password,
             role = 2,
-            otp = hashed_otp,
             approved = False,
             created_at = datetime.utcnow(),
             updated_at = None,
-            otp_expires_at = datetime.utcnow() + timedelta(minutes=5),
             otp_validated = False
         )
 
+        new_otp = Otp(
+            fin_kod = user.fin_kod,
+            otp = hashed_otp,
+            otp_expires_at = datetime.utcnow() + timedelta(minutes=5)
+        )
+
         db.add(new_user)
+        db.add(new_otp)
         await db.commit()
         await db.refresh(new_user)
+        await db.refresh(new_otp)
 
         return JSONResponse(
             content={

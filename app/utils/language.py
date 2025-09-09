@@ -1,23 +1,28 @@
-from typing import Optional
-from fastapi import Query, Header
+from fastapi import status, Query, Header, HTTPException
+from typing import Optional, Annotated
 
 DEFAULT_LANGUAGE = "en"
-
-# 1. ?lang=az / ?lang=en
-# 2. Use lang in header
-# 3. if no lang provided it will be en by default
+ALLOWED_LANGUAGES = {"en", "az"}
 
 async def get_language(
-    lang: Optional[str] = Query(default=None, description="Query param to override language"),
-    accept_language: Optional[str] = Header(default=None, description="Accept-Language header")
+    lang: Annotated[Optional[str], Query(description="Query param to override language")] = None,
+    accept_language: Annotated[Optional[str], Header(description="Accept-Language header")] = None
 ) -> str:
     
-    if lang and lang.strip():
-        return lang.strip().lower()
+    language = DEFAULT_LANGUAGE
 
-    if accept_language:
+    if lang and lang.strip():
+        language = lang.strip().lower()
+    
+    elif accept_language:
         primary_lang = accept_language.split(",")[0].split("-")[0].strip().lower()
         if primary_lang:
-            return primary_lang
+            language = primary_lang
 
-    return DEFAULT_LANGUAGE
+    if language not in ALLOWED_LANGUAGES:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Invalid language code '{language}'. Allowed values: {', '.join(ALLOWED_LANGUAGES)}"
+        )
+
+    return language

@@ -1,4 +1,3 @@
-
 from app.db.session import get_db
 from app.services.faculty import *
 from fastapi import APIRouter, Depends, Path
