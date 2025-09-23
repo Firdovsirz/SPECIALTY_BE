@@ -20,8 +20,8 @@ async def get_plos(specialty_code: str, lang: str = Depends(get_language), db: A
 
 # POST create new PLO
 @router.post("/plo", response_model=None)
-async def create_plo(plo_data: PloCreate, lang: str = Depends(get_language), db: AsyncSession = Depends(get_db)):
-    return await plo_service.create_plo(db, plo_data, lang)
+async def create_plo(plo_data: PloCreate, db: AsyncSession = Depends(get_db)):
+    return await plo_service.create_plo(db, plo_data)
 
 # DELETE PLO by plo_code
 @router.delete("/plo/{plo_code}")
@@ -33,10 +33,9 @@ async def delete_plo_endpoint(plo_code: str, db: AsyncSession = Depends(get_db))
 async def update_plo_endpoint(
     plo_code: str,
     plo_data: PloUpdate,
-    lang: str = Depends(get_language),
     db: AsyncSession = Depends(get_db)
 ):
-    return await plo_service.update_plo(db, plo_code, plo_data, lang)
+    return await plo_service.update_plo(db, plo_code, plo_data)
 
 
 

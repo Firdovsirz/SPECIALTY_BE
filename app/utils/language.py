@@ -1,7 +1,7 @@
 from fastapi import status, Query, Header, HTTPException
 from typing import Optional, Annotated
 
-DEFAULT_LANGUAGE = "en"
+DEFAULT_LANGUAGE = "az"
 ALLOWED_LANGUAGES = {"en", "az"}
 
 async def get_language(

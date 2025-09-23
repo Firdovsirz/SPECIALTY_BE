@@ -18,28 +18,17 @@ async def get_all_competency(lang: str = Depends(get_language), db: AsyncSession
 async def get_competencies_by_specialty(specialty_code: str, lang: str = Depends(get_language), db: AsyncSession = Depends(get_db)):
     return await competency_service.get_competencies_by_specialty(specialty_code=specialty_code, lang=lang, db=db)
 
-
 # POST Create new Competency
 @router.post("/competency")
-async def create_competency(competency_data: CompetencyCreate, lang: str = Depends(get_language), db: AsyncSession = Depends(get_db)):
-    return await competency_service.create_competency(db=db, competency_data=competency_data, lang=lang)
+async def create_competency(competency_data: CompetencyCreate, db: AsyncSession = Depends(get_db)):
+    return await competency_service.create_competency(db=db, competency_data=competency_data)
 
 # PUT Update Competency
 @router.put("/competency/{competency_code}")
-async def update_competency(competency_code: str, competency_data: CompetencyUpdate, lang: str = Depends(get_language), db:AsyncSession = Depends(get_db)):
-    return await competency_service.update_competency(db=db, competency_code=competency_code, competency_data=competency_data, lang=lang)
+async def update_competency(competency_code: str, competency_data: CompetencyUpdate, db:AsyncSession = Depends(get_db)):
+    return await competency_service.update_competency(db=db, competency_code=competency_code, competency_data=competency_data)
 
 # DELETE Competency
 @router.delete("/competency/{competency_code}")
 async def delete_competency(competency_code: str, db: AsyncSession = Depends(get_db)):
     return await competency_service.delete_competency(db=db, competency_code=competency_code)
-
-
-
-
-
-
-
-
-
-

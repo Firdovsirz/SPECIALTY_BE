@@ -1,17 +1,16 @@
-# services/specialty_characteristics.py
-from fastapi import Depends
-from fastapi.responses import JSONResponse
-from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.db.session import get_db
-from app.models.specialty_characteristics import SpecialtyCharacteristics
-from app.models.specialty_characteristics_translation import SpecialtyCharacteristicsTranslation
-from app.models.speciality import Specialty
 from app.api.v1.schemas.specialty_characteristics import (
     SpecialtyCharacteristicsCreate,
     SpecialtyCharacteristicsUpdate,
-    SpecialtyCharacteristicsTranslationOut
 )
+from app.db.session import get_db
+from fastapi import Depends, status
+from sqlalchemy.future import select
+from fastapi.responses import JSONResponse
+from app.models.speciality import Specialty
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.utils.translator import translate_to_english
+from app.models.specialty_characteristics import SpecialtyCharacteristics
+from app.models.specialty_characteristics_translation import SpecialtyCharacteristicsTranslation
 
 allowed_languages = ["en", "az"]
 
@@ -92,88 +91,90 @@ async def get_all_specialty_characteristics(db: AsyncSession, lang: str):
     except Exception as e:
         return JSONResponse({"statusCode": 500, "error": str(e)}, status_code=500)
 
-
 # CREATE SpecialtyCharacteristics
-async def create_specialty_characteristics(db: AsyncSession, char_data: SpecialtyCharacteristicsCreate, lang: str):
-    if lang not in allowed_languages:
-        return JSONResponse({"statusCode": 404, "message": "Invalid language code!"}, status_code=404)
-
+async def create_specialty_characteristics(db: AsyncSession, char_data: SpecialtyCharacteristicsCreate):
     try:
-        spec_q = await db.execute(select(Specialty).where(Specialty.specialty_code == char_data.specialty_code))
-        if not spec_q.scalars().first():
-            return JSONResponse({"statusCode": 404, "message": "Specialty code does not exist!"}, status_code=404)
-
-        result = await db.execute(select(SpecialtyCharacteristics).where(SpecialtyCharacteristics.specialty_code == char_data.specialty_code))
-        base_char = result.scalars().first()
-
-        if base_char is None:
-            new_char = SpecialtyCharacteristics(specialty_code=char_data.specialty_code)
-            db.add(new_char)
-            await db.flush() 
-
-            new_translation = SpecialtyCharacteristicsTranslation(
-                specialty_characteristic_id=new_char.id,
-                language_code=lang,
-                program_desc=char_data.program_desc,
-                degree_requirements=char_data.degree_requirements
-            )
-            db.add(new_translation)
-            await db.commit()
-            return JSONResponse({"statusCode": 201, "message": f"Specialty characteristics created with translation ({lang})!"}, status_code=201)
-
-        tr_q = await db.execute(
-            select(SpecialtyCharacteristicsTranslation)
-            .where(SpecialtyCharacteristicsTranslation.specialty_characteristic_id == base_char.id)
-            .where(SpecialtyCharacteristicsTranslation.language_code == lang)
+        exist_spec_char_query = await db.execute(
+            select(SpecialtyCharacteristics)
+            .where(SpecialtyCharacteristics.specialty_code == char_data.specialty_code)
         )
-        existing_tr = tr_q.scalars().first()
-        if existing_tr:
-            return JSONResponse({"statusCode": 409, "message": f"Translation already exists for language '{lang}'!"}, status_code=409)
+        existing_spec_char = exist_spec_char_query.scalar_one_or_none()
 
-        new_translation = SpecialtyCharacteristicsTranslation(
-            specialty_characteristic_id=base_char.id,
-            language_code=lang,
+        if existing_spec_char:
+            return JSONResponse(
+                content={
+                    "status_code": 409,
+                    "message": "Specialty characteristics already exists for provided specialty code."
+                }, status_code=status.HTTP_409_CONFLICT
+            )
+
+        new_char = SpecialtyCharacteristics(
+            specialty_code=char_data.specialty_code
+        )
+        db.add(new_char)
+        await db.flush() 
+
+        new_translation_en = SpecialtyCharacteristicsTranslation(
+            specialty_characteristic_id=new_char.id,
+            language_code="en",
+            program_desc=translate_to_english(char_data.program_desc),
+            degree_requirements=translate_to_english(char_data.degree_requirements)
+        )
+        new_translation_az = SpecialtyCharacteristicsTranslation(
+            specialty_characteristic_id=new_char.id,
+            language_code="az",
             program_desc=char_data.program_desc,
             degree_requirements=char_data.degree_requirements
         )
-        db.add(new_translation)
+        db.add(new_translation_az)
+        db.add(new_translation_en)
         await db.commit()
-        return JSONResponse({"statusCode": 201, "message": f"Translation added for language '{lang}'!"}, status_code=201)
+
+        return JSONResponse(
+            content={
+                "statusCode": 201,
+                "message": f"Specialty characteristics created with translations."
+            }, status_code=201
+        )
 
     except Exception as e:
         await db.rollback()
         return JSONResponse({"statusCode": 500, "error": str(e)}, status_code=500)
 
-
 # UPDATE SpecialtyCharacteristics
-async def update_specialty_characteristics(db: AsyncSession, specialty_code: str, char_data: SpecialtyCharacteristicsUpdate, lang: str):
-    if lang not in allowed_languages:
-        return JSONResponse({"statusCode": 404, "message": "Invalid language code!"}, status_code=404)
-
+async def update_specialty_characteristics(db: AsyncSession, specialty_code: str, char_data: SpecialtyCharacteristicsUpdate):
     try:
         res = await db.execute(select(SpecialtyCharacteristics).where(SpecialtyCharacteristics.specialty_code == specialty_code))
         char = res.scalars().first()
         if not char:
             return JSONResponse({"statusCode": 404, "message": "Specialty characteristics not found!"}, status_code=404)
 
-        tr_res = await db.execute(
+        tr_res_az = await db.execute(
             select(SpecialtyCharacteristicsTranslation)
             .where(SpecialtyCharacteristicsTranslation.specialty_characteristic_id == char.id)
-            .where(SpecialtyCharacteristicsTranslation.language_code == lang)
+            .where(SpecialtyCharacteristicsTranslation.language_code == "az")
         )
-        tr = tr_res.scalars().first()
-        if not tr:
-            return JSONResponse({"statusCode": 404, "message": f"Translation for language '{lang}' not found!"}, status_code=404)
+        tr_res_en = await db.execute(
+            select(SpecialtyCharacteristicsTranslation)
+            .where(SpecialtyCharacteristicsTranslation.specialty_characteristic_id == char.id)
+            .where(SpecialtyCharacteristicsTranslation.language_code == "en")
+        )
+        tr_az = tr_res_az.scalars().first()
+        tr_en = tr_res_en.scalars().first()
+        if not tr_az or not tr_en:
+            return JSONResponse({"statusCode": 404, "message": f"Translation for language' not found!"}, status_code=404)
 
-        tr.program_desc = char_data.program_desc
-        tr.degree_requirements = char_data.degree_requirements
+        tr_az.program_desc = char_data.program_desc
+        tr_az.degree_requirements = char_data.degree_requirements
+        tr_en.program_desc = translate_to_english(char_data.program_desc)
+        tr_en.degree_requirements = translate_to_english(char_data.degree_requirements)
+
         await db.commit()
-        return JSONResponse({"statusCode": 200, "message": f"Specialty characteristics updated for language '{lang}'!"}, status_code=200)
+        return JSONResponse({"statusCode": 200, "message": f"Specialty characteristics updated for language!"}, status_code=200)
 
     except Exception as e:
         await db.rollback()
         return JSONResponse({"statusCode": 500, "error": str(e)}, status_code=500)
-
 
 # DELETE SpecialtyCharacteristics
 async def delete_specialty_characteristics(db: AsyncSession, specialty_code: str):

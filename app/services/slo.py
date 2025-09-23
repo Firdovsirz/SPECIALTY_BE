@@ -1,18 +1,24 @@
-from fastapi import Depends
-from fastapi.responses import JSONResponse
-from app.db.session import get_db
-from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.slo import Slo
-from app.models.slo_translations import SloTranslation
+import random
 import sqlalchemy as sa
-from app.api.v1.schemas.slo import SloCreate
+from app.models.slo import Slo
+from app.db.session import get_db
+from fastapi import Depends, status
+from sqlalchemy.future import select
+from fastapi.responses import JSONResponse
 from app.utils.language import get_language
-from app.models.university import University
 from app.models.speciality import Specialty
+from app.api.v1.schemas.slo import SloCreate
+from app.models.university import University
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.utils.translator import translate_to_english
+from app.models.slo_translations import SloTranslation
 
 
 allowed_languages = ["en","az"]
+
+def generate_slo_code():
+    random_number = random.randint(10000, 99999)
+    return f"SLO-{random_number}"
 
 async def get_all_slos(db: AsyncSession, lang: str = Depends(get_language)):
     if lang not in allowed_languages:
@@ -44,7 +50,6 @@ async def get_all_slos(db: AsyncSession, lang: str = Depends(get_language)):
         for slo, translation in rows:
             slos.append({
                 "id": slo.id,
-                "university_code": slo.university_code,
                 "specialty_code": slo.specialty_code,
                 "slo_code": slo.slo_code,
                 "language_code": translation.language_code,
@@ -114,7 +119,6 @@ async def get_slos_by_specialty(
         for slo, translation in rows:
             slos.append({
                 "id": slo.id,
-                "university_code": slo.university_code,
                 "specialty_code": slo.specialty_code,
                 "slo_code": slo.slo_code,
                 "language_code": translation.language_code,
@@ -136,108 +140,47 @@ async def get_slos_by_specialty(
             status_code=500
         )
 
-
 # Create SLO with translations
-async def create_slo(db: AsyncSession, slo_data, lang: str):
+async def create_slo(db: AsyncSession, slo_data):
     try:
-        if lang not in allowed_languages:
+        specialty_q = await db.execute(
+            select(Specialty).where(Specialty.specialty_code == slo_data.specialty_code)
+        )
+        if not specialty_q.scalars().first():
             return JSONResponse(
-                content={"statusCode": 404, "message": "Invalid language code!"},
+                content={"statusCode": 404, "message": "Specialty code does not exist!"},
                 status_code=404
             )
+        
+        slo_code = generate_slo_code()
 
-        result = await db.execute(select(Slo).where(Slo.slo_code == slo_data.slo_code))
-        base_slo = result.scalars().first()
-
-        if base_slo is None:
-            uni_q = await db.execute(
-                select(University).where(University.university_code == slo_data.university_code)
-            )
-            if not uni_q.scalars().first():
-                return JSONResponse(
-                    content={"statusCode": 404, "message": "University code does not exist!"},
-                    status_code=404
-                )
-
-            specialty_q = await db.execute(
-                select(Specialty).where(Specialty.specialty_code == slo_data.specialty_code)
-            )
-            if not specialty_q.scalars().first():
-                return JSONResponse(
-                    content={"statusCode": 404, "message": "Specialty code does not exist!"},
-                    status_code=404
-                )
-
-            new_slo = Slo(
-                university_code=slo_data.university_code,
-                specialty_code=slo_data.specialty_code,
-                slo_code=slo_data.slo_code,
-            )
-            db.add(new_slo)
-
-            new_translation = SloTranslation(
-                slo_code=slo_data.slo_code,
-                language_code=lang,
-                slo_content=slo_data.slo_content,
-            )
-            db.add(new_translation)
-
-            await db.commit()
-            return JSONResponse(
-                content={
-                    "statusCode": 201,
-                    "message": f"SLO created successfully with translation ({lang})!",
-                    "slo_code": slo_data.slo_code
-                },
-                status_code=201
-            )
-
-        if (
-            base_slo.university_code != slo_data.university_code
-            or base_slo.specialty_code != slo_data.specialty_code
-        ):
-            return JSONResponse(
-                content={
-                    "statusCode": 409,
-                    "message": "SLO exists but university_code/specialty_code mismatch!"
-                },
-                status_code=409
-            )
-
-        translation_q = await db.execute(
-            select(SloTranslation).where(
-                SloTranslation.slo_code == slo_data.slo_code,
-                SloTranslation.language_code == lang
-            )
+        new_slo = Slo(
+            specialty_code=slo_data.specialty_code,
+            slo_code=slo_code,
         )
-        existing_translation = translation_q.scalars().first()
+        db.add(new_slo)
 
-        if existing_translation:
-            return JSONResponse(
-                content={
-                    "statusCode": 409,
-                    "message": f"SLO translation already exists for '{lang}'!"
-                },
-                status_code=409
-            )
-
-        new_translation = SloTranslation(
-            slo_code=slo_data.slo_code,
-            language_code=lang,
+        new_translation_az = SloTranslation(
+            slo_code=slo_code,
+            language_code="az",
             slo_content=slo_data.slo_content,
         )
-        db.add(new_translation)
-        await db.commit()
+        new_translation_en = SloTranslation(
+            slo_code=slo_code,
+            language_code="en",
+            slo_content=translate_to_english(slo_data.slo_content),
+        )
+        db.add(new_translation_az)
+        db.add(new_translation_en)
 
+        await db.commit()
         return JSONResponse(
             content={
                 "statusCode": 201,
-                "message": f"SLO translation added for '{lang}'!",
-                "slo_code": slo_data.slo_code
+                "message": f"SLO created successfully with translation!"
             },
             status_code=201
         )
-
     except Exception as e:
         await db.rollback()
         return JSONResponse(
@@ -278,13 +221,7 @@ async def delete_slo(db: AsyncSession, slo_code: str):
 
 
 # UPDATE SLO by slo_code
-async def update_slo(db: AsyncSession, slo_code: str, slo_data, lang: str):
-    if lang not in allowed_languages:
-        return JSONResponse(
-            {"statusCode": 404, "message": "Invalid language code!"},
-            status_code=404
-        )
-
+async def update_slo(db: AsyncSession, slo_code: str, slo_data):
     try:
         res = await db.execute(select(Slo).where(Slo.slo_code == slo_code))
         slo = res.scalars().first()
@@ -293,48 +230,33 @@ async def update_slo(db: AsyncSession, slo_code: str, slo_data, lang: str):
                 {"statusCode": 404, "error": "SLO not found!"},
                 status_code=404
             )
-
-        if slo.university_code != slo_data.university_code:
-            uni_q = await db.execute(
-                select(University).where(University.university_code == slo_data.university_code)
-            )
-            if not uni_q.scalars().first():
-                return JSONResponse(
-                    {"statusCode": 404, "error": "University code does not exist!"},
-                    status_code=404
-                )
-
-        if slo.specialty_code != slo_data.specialty_code:
-            spec_q = await db.execute(
-                select(Specialty).where(Specialty.specialty_code == slo_data.specialty_code)
-            )
-            if not spec_q.scalars().first():
-                return JSONResponse(
-                    {"statusCode": 404, "error": "Specialty code does not exist!"},
-                    status_code=404
-                )
-
-        slo.university_code = slo_data.university_code
-        slo.specialty_code = slo_data.specialty_code
-
-        tr_res = await db.execute(
+        
+        tr_res_az = await db.execute(
             select(SloTranslation).where(
                 SloTranslation.slo_code == slo_code,
-                SloTranslation.language_code == lang
+                SloTranslation.language_code == "az"
             )
         )
-        tr = tr_res.scalars().first()
+        tr_res_en = await db.execute(
+            select(SloTranslation).where(
+                SloTranslation.slo_code == slo_code,
+                SloTranslation.language_code == "en"
+            )
+        )
+        tr_az = tr_res_az.scalars().first()
+        tr_en = tr_res_en.scalars().first()
 
-        if not tr:
+        if not tr_az or not tr_en:
             return JSONResponse(
                 {
                     "statusCode": 404,
-                    "error": f"SLO translation not found for language '{lang}'!"
+                    "error": f"SLO translation not found!"
                 },
                 status_code=404
             )
 
-        tr.slo_content = slo_data.slo_content
+        tr_az.slo_content = slo_data.slo_content
+        tr_en.slo_content = translate_to_english(slo_data.slo_content)
         
         await db.commit()
         await db.refresh(slo)
@@ -342,7 +264,7 @@ async def update_slo(db: AsyncSession, slo_code: str, slo_data, lang: str):
         return JSONResponse(
             {
                 "statusCode": 200,
-                "message": f"SLO updated successfully for language '{lang}'!"
+                "message": f"SLO updated successfully."
             },
             status_code=200
         )

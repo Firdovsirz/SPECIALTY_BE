@@ -1,17 +1,21 @@
-from fastapi import Depends
-from fastapi.responses import JSONResponse
-from app.db.session import get_db
-from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.models.plo import Plo
-from app.models.plo_translations import PloTranslation
+import random
 import sqlalchemy as sa
-from app.api.v1.schemas.plo import PloCreate
+from app.models.plo import Plo
+from app.db.session import get_db
+from fastapi import Depends, status
+from sqlalchemy.future import select
+from fastapi.responses import JSONResponse
 from app.utils.language import get_language
-from app.models.university import University
 from app.models.speciality import Specialty
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.utils.translator import translate_to_english
+from app.models.plo_translations import PloTranslation
 
 allowed_languages = ["en","az"]
+
+def generate_plo_code():
+    random_number = random.randint(10000, 99999)
+    return f"PLO-{random_number}"
 
 async def get_all_plos(db: AsyncSession, lang: str = Depends(get_language)):
     if lang not in allowed_languages:
@@ -43,7 +47,6 @@ async def get_all_plos(db: AsyncSession, lang: str = Depends(get_language)):
         for plo, translation in rows:
             plos.append({
                 "id": plo.id,
-                "university_code": plo.university_code,
                 "specialty_code": plo.specialty_code,
                 "plo_code": plo.plo_code,
                 "language_code": translation.language_code,
@@ -113,7 +116,6 @@ async def get_plos_by_specialty(
         for plo, translation in rows:
             plos.append({
                 "id": plo.id,
-                "university_code": plo.university_code,
                 "specialty_code": plo.specialty_code,
                 "plo_code": plo.plo_code,
                 "language_code": translation.language_code,
@@ -135,104 +137,46 @@ async def get_plos_by_specialty(
             status_code=500
         )
 
-
 # Create PLO with translations
-async def create_plo(db: AsyncSession, plo_data, lang: str):
+async def create_plo(db: AsyncSession, plo_data):
     try:
-        if lang not in allowed_languages:
+        specialty_q = await db.execute(
+            select(Specialty).where(Specialty.specialty_code == plo_data.specialty_code)
+        )
+        if not specialty_q.scalars().first():
             return JSONResponse(
-                content={"statusCode": 404, "message": "Invalid language code!"},
+                content={"statusCode": 404, "message": "Specialty code does not exist!"},
                 status_code=404
             )
+        
+        plo_code = generate_plo_code()
 
-        result = await db.execute(select(Plo).where(Plo.plo_code == plo_data.plo_code))
-        base_plo = result.scalars().first()
-
-        if base_plo is None:
-            uni_q = await db.execute(
-                select(University).where(University.university_code == plo_data.university_code)
-            )
-            if not uni_q.scalars().first():
-                return JSONResponse(
-                    content={"statusCode": 404, "message": "University code does not exist!"},
-                    status_code=404
-                )
-
-            specialty_q = await db.execute(
-                select(Specialty).where(Specialty.specialty_code == plo_data.specialty_code)
-            )
-            if not specialty_q.scalars().first():
-                return JSONResponse(
-                    content={"statusCode": 404, "message": "Specialty code does not exist!"},
-                    status_code=404
-                )
-
-            new_plo = Plo(
-                university_code=plo_data.university_code,
-                specialty_code=plo_data.specialty_code,
-                plo_code=plo_data.plo_code,
-            )
-            db.add(new_plo)
-
-            new_translation = PloTranslation(
-                plo_code=plo_data.plo_code,
-                language_code=lang,
-                plo_content=plo_data.plo_content,
-            )
-            db.add(new_translation)
-
-            await db.commit()
-            return JSONResponse(
-                content={
-                    "statusCode": 201,
-                    "message": f"PLO created successfully with translation ({lang})!",
-                    "plo_code": plo_data.plo_code
-                },
-                status_code=201
-            )
-
-        if (
-            base_plo.university_code != plo_data.university_code
-            or base_plo.specialty_code != plo_data.specialty_code
-        ):
-            return JSONResponse(
-                content={
-                    "statusCode": 409,
-                    "message": "PLO exists but university_code/specialty_code mismatch!"
-                },
-                status_code=409
-            )
-
-        translation_q = await db.execute(
-            select(PloTranslation).where(
-                PloTranslation.plo_code == plo_data.plo_code,
-                PloTranslation.language_code == lang
-            )
+        new_plo = Plo(
+            specialty_code=plo_data.specialty_code,
+            plo_code=plo_code,
         )
-        existing_translation = translation_q.scalars().first()
+        db.add(new_plo)
 
-        if existing_translation:
-            return JSONResponse(
-                content={
-                    "statusCode": 409,
-                    "message": f"PLO translation already exists for '{lang}'!"
-                },
-                status_code=409
-            )
-
-        new_translation = PloTranslation(
-            plo_code=plo_data.plo_code,
-            language_code=lang,
+        new_translation_az = PloTranslation(
+            plo_code=plo_code,
+            language_code="az",
             plo_content=plo_data.plo_content,
         )
-        db.add(new_translation)
-        await db.commit()
 
+        new_translation_en = PloTranslation(
+            plo_code=plo_code,
+            language_code="en",
+            plo_content=translate_to_english(plo_data.plo_content),
+        )
+
+        db.add(new_translation_az)
+        db.add(new_translation_en)
+
+        await db.commit()
         return JSONResponse(
             content={
                 "statusCode": 201,
-                "message": f"PLO translation added for '{lang}'!",
-                "plo_code": plo_data.plo_code
+                "message": f"PLO created successfully with translation."
             },
             status_code=201
         )
@@ -243,8 +187,6 @@ async def create_plo(db: AsyncSession, plo_data, lang: str):
             content={"statusCode": 500, "error": str(e)},
             status_code=500
         )
-
-
 
 # DELETE PLO by plo_code
 async def delete_plo(db: AsyncSession, plo_code: str):
@@ -276,15 +218,8 @@ async def delete_plo(db: AsyncSession, plo_code: str):
             status_code=500
         )
 
-
 # UPDATE PLO by plo_code
-async def update_plo(db: AsyncSession, plo_code: str, plo_data, lang: str):
-    if lang not in allowed_languages:
-        return JSONResponse(
-            {"statusCode": 404, "message": "Invalid language code!"},
-            status_code=404
-        )
-
+async def update_plo(db: AsyncSession, plo_code: str, plo_data):
     try:
         res = await db.execute(select(Plo).where(Plo.plo_code == plo_code))
         plo = res.scalars().first()
@@ -293,48 +228,33 @@ async def update_plo(db: AsyncSession, plo_code: str, plo_data, lang: str):
                 {"statusCode": 404, "error": "PLO not found!"},
                 status_code=404
             )
-
-        if plo.university_code != plo_data.university_code:
-            uni_q = await db.execute(
-                select(University).where(University.university_code == plo_data.university_code)
-            )
-            if not uni_q.scalars().first():
-                return JSONResponse(
-                    {"statusCode": 404, "error": "University code does not exist!"},
-                    status_code=404
-                )
-
-        if plo.specialty_code != plo_data.specialty_code:
-            spec_q = await db.execute(
-                select(Specialty).where(Specialty.specialty_code == plo_data.specialty_code)
-            )
-            if not spec_q.scalars().first():
-                return JSONResponse(
-                    {"statusCode": 404, "error": "Specialty code does not exist!"},
-                    status_code=404
-                )
-
-        plo.university_code = plo_data.university_code
-        plo.specialty_code = plo_data.specialty_code
-
-        tr_res = await db.execute(
+        
+        tr_res_az = await db.execute(
             select(PloTranslation).where(
                 PloTranslation.plo_code == plo_code,
-                PloTranslation.language_code == lang
+                PloTranslation.language_code == "az"
             )
         )
-        tr = tr_res.scalars().first()
+        tr_res_en = await db.execute(
+            select(PloTranslation).where(
+                PloTranslation.plo_code == plo_code,
+                PloTranslation.language_code == "en"
+            )
+        )
+        tr_az = tr_res_az.scalars().first()
+        tr_en = tr_res_en.scalars().first()
 
-        if not tr:
+        if not tr_az or not tr_en:
             return JSONResponse(
                 {
                     "statusCode": 404,
-                    "error": f"PLO translation not found for language '{lang}'!"
+                    "error": f"PLO translation not found for language."
                 },
                 status_code=404
             )
 
-        tr.plo_content = plo_data.plo_content
+        tr_az.plo_content = plo_data.plo_content
+        tr_en.plo_content = translate_to_english(plo_data.plo_content)
 
         await db.commit()
         await db.refresh(plo)
@@ -342,7 +262,7 @@ async def update_plo(db: AsyncSession, plo_code: str, plo_data, lang: str):
         return JSONResponse(
             {
                 "statusCode": 200,
-                "message": f"PLO updated successfully for language '{lang}'!"
+                "message": f"PLO updated successfully for language!"
             },
             status_code=200
         )
@@ -353,13 +273,3 @@ async def update_plo(db: AsyncSession, plo_code: str, plo_data, lang: str):
             {"statusCode": 500, "error": str(e)},
             status_code=500
         )
-
-
-
-
-
-
-
-
-
-

@@ -2,15 +2,21 @@ import random
 from sqlalchemy import select
 from app.models.otp import Otp
 from app.models.auth import Auth
+from app.models.user import User
 from app.db.session import get_db
 from fastapi import Depends, status
 from datetime import datetime, timedelta
 from fastapi.responses import JSONResponse
+from app.utils.email import send_html_email
 from app.utils.jwt import encode_auth_token
-from app.utils.security import hash_password
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.password_validator import validate_password
+from app.utils.security import hash_password, verify_password
 from app.api.v1.schemas.auth import SignUp, SignIn, ValidateOTP
+
+
+templates = Jinja2Templates(directory="template")
 
 def generateOtp(length: int = 6) -> str:
     otp = ''.join(str(random.randint(0, 9)) for _ in range(length))
@@ -23,7 +29,6 @@ async def signup(
     try:
         fetched_exist_user = await db.execute(
             select(Auth)
-            .join(Auth.otp)
             .where(Auth.fin_kod == user.fin_kod)
         )
 
@@ -40,18 +45,26 @@ async def signup(
         validate_password(user.password)
 
         otp = generateOtp()
-        hashed_otp = hashed_password(otp)
-        hashed_password = hash_password(user.password)
-        
-        new_user = Auth(
-            university_code = user.university_code,
+        hashed_otp = hash_password(otp)
+        user_hashed_password = hash_password(user.password)
+
+        new_auth_user = Auth(
             fin_kod = user.fin_kod,
-            password = hashed_password,
+            password = user_hashed_password,
             role = 2,
             approved = False,
             created_at = datetime.utcnow(),
             updated_at = None,
-            otp_validated = False
+        )
+
+        new_user = User(
+            name=user.name,
+            surname=user.surname,
+            father_name=user.father_name,
+            fin_kod=user.fin_kod,
+            email=user.email,
+            cafedra_code=user.cafedra_code,
+            created_at=datetime.utcnow()
         )
 
         new_otp = Otp(
@@ -61,10 +74,27 @@ async def signup(
         )
 
         db.add(new_user)
+        db.add(new_auth_user)
         db.add(new_otp)
         await db.commit()
         await db.refresh(new_user)
+        await db.refresh(new_auth_user)
         await db.refresh(new_otp)
+
+        subject = "Qeydiyyat"
+
+        html_content = templates.get_template("/registration_email.html").render({
+            "name": user.name })
+
+        send_html_email(subject, user.email, user.name, html_content)
+
+        subject = "OTP"
+
+        html_content = templates.get_template("/otp_verification.html").render({
+            "otp_code": otp})
+
+        send_html_email(subject, user.email, user.name, html_content)
+
 
         return JSONResponse(
             content={
@@ -101,14 +131,14 @@ async def signin(
                 }, status_code=status.HTTP_401_UNAUTHORIZED
             )
         
-        # fetched_user = await db.execute(
-        #     select(User)
-        #     .where(User.fin_kod == credentials.fin_kod)
-        # )
+        fetched_user = await db.execute(
+            select(User)
+            .where(User.fin_kod == credentials.fin_kod)
+        )
 
-        # user = fetched_user.scalar_one_or_none()
+        user = fetched_user.scalar_one_or_none()
         
-        if hash_password(credentials.password) != exist_user.password:
+        if not verify_password(credentials.password, exist_user.password):
             return JSONResponse(
                 content={
                     "statusCode": 401,
@@ -123,9 +153,16 @@ async def signin(
                 "statusCode": 200,
                 "message": "AUTHORIZED",
                 "token": token,
-                # "user": {
-                #     "name": user.name
-                # }
+                "user": {
+                    "name": user.name,
+                    "surname": user.surname,
+                    "father_name": user.father_name,
+                    "fin_kod": user.fin_kod,
+                    "role": exist_user.role,
+                    "cafedra_code": user.cafedra_code,
+                    "email": user.email,
+                    "created_at": user.created_at.isoformat() if user.created_at else None
+                }
             }
         )
     

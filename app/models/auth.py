@@ -17,7 +17,6 @@ class Auth(Base):
     )
 
     id = Column(Integer, primary_key=True, index=True)
-    univesity_code = Column(String, ForeignKey("universities.university_code"), nullable=False)
     fin_kod = Column(String, nullable=False, unique=True)
     password = Column(String, nullable=False)
     role = Column(Integer, nullable=False)
@@ -26,7 +25,6 @@ class Auth(Base):
     approved = Column(Boolean, nullable=False, default=False)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime)
-    otp_validated = Column(Boolean, nullable=False, default=False)
 
-    # university = relationship("University", back_populates="university")
-    # otp = relationship("Otp", back_populates="auth", uselist=False)
+    otp = relationship("Otp", back_populates="auth", uselist=False)
+    user = relationship("User", back_populates="auth_user", uselist=False)

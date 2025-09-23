@@ -21,5 +21,11 @@ class Specialty(Base):
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime)
 
-    university = relationship("University", back_populates="specialties")
     cafedra = relationship("Cafedra", back_populates="specialties")
+    specialty_translations = relationship("SpecialtyTranslations", back_populates="specialty", cascade="all, delete-orphan")
+    plos = relationship("Plo", back_populates="specialty", cascade="all, delete-orphan")
+    slos = relationship("Slo", back_populates="specialty", cascade="all, delete-orphan")
+    gco = relationship("GCO", back_populates="specialty", cascade="all, delete-orphan")
+    competency = relationship("Competency", back_populates="specialty", cascade="all, delete-orphan")
+    specialty_characteristics = relationship("SpecialtyCharacteristics", back_populates="specialty", cascade="all, delete-orphan")
+    curricula_programs = relationship("CurriculaProgram", back_populates="specialty", cascade="all, delete-orphan")

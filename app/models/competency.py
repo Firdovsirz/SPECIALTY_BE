@@ -12,20 +12,8 @@ class Competency(Base):
     __tablename__ = "competency"
 
     id = Column(Integer, primary_key=True, index=True)
-    university_code = Column(String, ForeignKey("universities.university_code"), nullable=False)
     specialty_code = Column(String, ForeignKey("specialties.specialty_code"), nullable=False)
     competency_code = Column(String, nullable=False, unique=True)
 
     translations = relationship("CompetencyTranslation", back_populates="competency")
     specialty = relationship("Specialty", back_populates="competency")
-    university = relationship("University", back_populates="competency")
-
-
-
-
-
-
-
-
-
-

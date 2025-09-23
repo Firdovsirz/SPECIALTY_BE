@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from typing import List
-
 from app.api.v1.schemas.slo import SloCreate, SloOut, SloTranslationOut, SloUpdate
 from app.services import slo as slo_service
 from app.utils.language import get_language
@@ -22,8 +21,8 @@ async def get_slos(specialty_code: str, lang: str = Depends(get_language), db: A
 
 # POST create new SLO
 @router.post("/slo", response_model=None)
-async def create_slo(slo_data: SloCreate, lang: str = Depends(get_language), db: AsyncSession = Depends(get_db)):
-    return await slo_service.create_slo(db, slo_data, lang)
+async def create_slo(slo_data: SloCreate, db: AsyncSession = Depends(get_db)):
+    return await slo_service.create_slo(db, slo_data)
 
 # DELETE SLO by slo_code
 @router.delete("/slo/{slo_code}")
@@ -35,7 +34,6 @@ async def delete_slo_endpoint(slo_code: str, db: AsyncSession = Depends(get_db))
 async def update_slo_endpoint(
     slo_code: str,
     slo_data: SloUpdate,
-    lang: str = Depends(get_language),
     db: AsyncSession = Depends(get_db)
 ):
-    return await slo_service.update_slo(db, slo_code, slo_data, lang)
+    return await slo_service.update_slo(db, slo_code, slo_data)

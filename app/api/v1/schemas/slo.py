@@ -6,16 +6,10 @@ class SloTranslationCreate(BaseModel):
     slo_content: str
 
 class SloCreate(BaseModel):
-    university_code: str
     specialty_code: str
-    slo_code: str
-    # translations: List[SloTranslationCreate]
     slo_content: str
 
 class SloUpdate(BaseModel):
-    university_code: str
-    specialty_code: str
-    # translations: List[SloTranslationCreate]
     slo_content: str
 
 class SloTranslationOut(BaseModel):
@@ -24,7 +18,6 @@ class SloTranslationOut(BaseModel):
 
 class SloOut(BaseModel):
     id: int
-    university_code: str
     specialty_code: str
     slo_code: str
     translations: List[SloTranslationOut]

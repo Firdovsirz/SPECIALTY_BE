@@ -21,25 +21,15 @@ async def get_gcos_by_specialty(specialty_code: str, lang: str = Depends(get_lan
 
 # POST Create new GCO
 @router.post("/gco")
-async def create_gco(gco_data: GCOCreate, lang: str = Depends(get_language), db: AsyncSession = Depends(get_db)):
-    return await gco_service.create_gco(db=db, gco_data=gco_data, lang=lang)
+async def create_gco(gco_data: GCOCreate, db: AsyncSession = Depends(get_db)):
+    return await gco_service.create_gco(db=db, gco_data=gco_data)
 
 # PUT Update GCO
 @router.put("/gco/{career_code}")
-async def update_gco(career_code: str, gco_data: GCOUpdate, lang: str = Depends(get_language), db:AsyncSession = Depends(get_db)):
-    return await gco_service.update_gco(db=db, career_code=career_code, gco_data=gco_data, lang=lang)
+async def update_gco(career_code: str, gco_data: GCOUpdate, db:AsyncSession = Depends(get_db)):
+    return await gco_service.update_gco(db=db, career_code=career_code, gco_data=gco_data)
 
 # DELETE GCO
 @router.delete("/gco/{career_code}")
 async def delete_gco(career_code: str, db: AsyncSession = Depends(get_db)):
     return await gco_service.delete_gco(db=db, career_code=career_code)
-
-
-
-
-
-
-
-
-
-

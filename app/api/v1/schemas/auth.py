@@ -4,14 +4,12 @@ class AuthBase(BaseModel):
     name: str
     surname: str
     father_name: str
-    role: str
-    university_code: str
     fin_kod: str
-    user_type: str
-    project_role: str
+    cafedra_code: str
 
 class SignUp(AuthBase):
     password: str
+    email: str
     pass
 
 class SignIn(BaseModel):

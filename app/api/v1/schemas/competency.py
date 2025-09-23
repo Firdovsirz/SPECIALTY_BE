@@ -5,14 +5,10 @@ class CompetencyTranslationCreate(BaseModel):
     competency_content: str
 
 class CompetencyCreate(BaseModel):
-    university_code: str
     specialty_code: str
-    competency_code: str
     competency_content: str
 
 class CompetencyUpdate(BaseModel):
-    university_code: str
-    specialty_code: str
     competency_content: str
 
 class CompetencyTranslationOut(BaseModel):

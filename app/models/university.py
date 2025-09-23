@@ -1,4 +1,3 @@
-# university model
 from sqlalchemy import (
     Integer,
     String,
@@ -27,7 +26,3 @@ class University(Base):
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime, nullable=True)
     deleted_at = Column(DateTime, nullable=True)
-
-    faculties = relationship("Faculty", back_populates="university")
-    cafedras = relationship("Cafedra", back_populates="university")
-    specialties = relationship("Specialty", back_populates="university")

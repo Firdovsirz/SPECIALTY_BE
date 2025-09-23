@@ -7,16 +7,10 @@ class PloTranslationCreate(BaseModel):
     plo_content: str
 
 class PloCreate(BaseModel):
-    university_code: str
     specialty_code: str
-    plo_code: str
-    # translations: List[PloTranslationCreate]
     plo_content: str
 
 class PloUpdate(BaseModel):
-    university_code: str
-    specialty_code: str
-    # translations: List[PloTranslationCreate]
     plo_content: str
 
 class PloTranslationOut(BaseModel):
@@ -25,14 +19,5 @@ class PloTranslationOut(BaseModel):
 
 class PloOut(BaseModel):
     id: int
-    university_code: str
     specialty_code: str
     plo_code: str
-    translations: List[PloTranslationOut]
-
-
-
-
-
-
-
