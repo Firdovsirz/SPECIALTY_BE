@@ -10,7 +10,7 @@ from app.models.speciality import Specialty
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.translator import translate_to_english
 from app.models.specialty_characteristics import SpecialtyCharacteristics
-from app.models.specialty_characteristics_translation import SpecialtyCharacteristicsTranslation
+from app.models.translation.specialty_characteristics_translation import SpecialtyCharacteristicsTranslation
 
 allowed_languages = ["en", "az"]
 

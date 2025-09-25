@@ -2,15 +2,14 @@ from logging.config import fileConfig
 from dotenv import load_dotenv
 import os
 
+from SPECIALTY_BE.app.models.translation import gco_translations, plo_translations, slo_translations, specialty_characteristics_translation
 from app.db.database import Base
 from app.models import (
     auth, cafedra, 
     faculty, university, speciality, 
-    plo, plo_translations, 
-    slo_translations, slo, 
-    gco, gco_translations, 
-    competency, competency_tranlation, 
-    specialty_characteristics, specialty_characteristics_translation)
+    plo, slo, 
+    gco, competency, competency_tranlation, 
+    specialty_characteristics)
  
 
 from sqlalchemy import engine_from_config

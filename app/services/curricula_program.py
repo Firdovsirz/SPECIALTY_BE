@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.schemas.curricula_program import *
 from app.utils.translator import translate_to_english
 from app.models.curricula_program import CurriculaProgram
-from app.models.curricula_program_translations import CurriculaProgramTranslations
+from SPECIALTY_BE.app.models.translation.curricula_program_translations import CurriculaProgramTranslations
 import logging
 
 logger = logging.getLogger(__name__)

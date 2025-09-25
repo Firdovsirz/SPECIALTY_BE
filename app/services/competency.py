@@ -10,7 +10,7 @@ from app.models.competency import Competency
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.translator import translate_to_english
 from app.api.v1.schemas.competency import CompetencyCreate
-from app.models.competency_tranlation import CompetencyTranslation
+from app.models.translation.competency_tranlation import CompetencyTranslation
 
 allowed_languages = ["en", "az"]
 

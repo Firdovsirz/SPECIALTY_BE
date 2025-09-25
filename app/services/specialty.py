@@ -11,8 +11,8 @@ from app.models.speciality import Specialty
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.translator import translate_to_english
 from app.api.v1.schemas.specialty import CreateSpecialty
-from app.models.cafedra_translations import CafedraTranslations
-from app.models.specialty_translations import SpecialtyTranslations
+from app.models.translation.cafedra_translations import CafedraTranslations
+from app.models.translation.specialty_translations import SpecialtyTranslations
 
 async def get_specialties(
     faculty_code: str = Query(None),
