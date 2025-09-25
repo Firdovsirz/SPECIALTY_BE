@@ -10,7 +10,7 @@ from fastapi.responses import JSONResponse
 from app.utils.language import get_language
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.translator import translate_to_english
-from SPECIALTY_BE.app.models.translation.cafedra_translations import CafedraTranslations
+from app.models.translation.cafedra_translations import CafedraTranslations
 
 
 async def get_cafedras_from_lms(db: AsyncSession = Depends(get_db)):

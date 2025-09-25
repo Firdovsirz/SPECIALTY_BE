@@ -9,7 +9,7 @@ from app.utils.language import get_language
 from app.models.speciality import Specialty
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.translator import translate_to_english
-from SPECIALTY_BE.app.models.translation.plo_translations import PloTranslation
+from app.models.translation.plo_translations import PloTranslation
 
 allowed_languages = ["en","az"]
 
