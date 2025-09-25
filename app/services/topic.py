@@ -11,7 +11,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.schemas.topic import CreateTopic
 from app.utils.translator import translate_to_english
 from app.models.curricula_program import CurriculaProgram
-from app.models.topic_translations import TopicTranslations
+from app.models.translation.topic_translations import TopicTranslations
 from sqlalchemy import func
 import traceback
 

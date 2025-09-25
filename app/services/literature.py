@@ -9,7 +9,7 @@ from app.utils.language import get_language
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.v1.schemas.literature import CreateLiterature, UpdateLiterature
 from app.utils.translator import translate_to_english
-from app.models.literature import LiteratureTrans
+from app.models.translation.literature_translation import LiteratureTrans
 from sqlalchemy import func, and_, or_
 import traceback
 

@@ -9,7 +9,7 @@ from app.utils.language import get_language
 from app.api.v1.schemas.clo import CreateClo
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.translator import translate_to_english
-from app.models.clo_translations import CloTranslations
+from app.models.translation.clo_translations import CloTranslations
 from app.models.curricula_program import CurriculaProgram
 
 def generate_clo_code():

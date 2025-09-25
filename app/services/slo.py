@@ -11,7 +11,7 @@ from app.api.v1.schemas.slo import SloCreate
 from app.models.university import University
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.translator import translate_to_english
-from app.models.slo_translations import SloTranslation
+from app.models.translation.slo_translations import SloTranslation
 
 
 allowed_languages = ["en","az"]

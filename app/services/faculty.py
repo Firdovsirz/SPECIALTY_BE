@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 from app.utils.language import get_language
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.translator import translate_to_english
-from app.models.faculty_translations import FacultyTranslations
+from SPECIALTY_BE.app.models.translation.faculty_translations import FacultyTranslations
 
 
 async def get_faculties_from_lms(db: AsyncSession = Depends(get_db)):

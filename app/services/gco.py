@@ -9,7 +9,7 @@ from app.models.speciality import Specialty
 from app.api.v1.schemas.gco import GCOCreate
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.utils.translator import translate_to_english
-from app.models.gco_translations import GCOTranslation
+from SPECIALTY_BE.app.models.translation.gco_translations import GCOTranslation
 
 def generate_gco_code():
     random_number = random.randint(10000, 99999)
