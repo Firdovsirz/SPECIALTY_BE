@@ -13,6 +13,7 @@ if not DATABASE_URL:
 from app.api.v1.routes.plo import router as plo_router
 from app.api.v1.routes.slo import router as slo_router
 from app.api.v1.routes.clo import router as clo_router
+from app.api.v1.routes.tlo import router as tlo_router
 from app.api.v1.routes.gco import router as gco_router
 from app.api.v1.routes.auth import router as auth_router
 from app.api.v1.routes.topic import router as topic_router
@@ -38,7 +39,7 @@ app.add_middleware(
 app.include_router(slo_router, prefix="/api", tags=['SLO'])
 app.include_router(plo_router, prefix="/api", tags=['PLO'])
 app.include_router(gco_router, prefix="/api", tags=['GCO'])
-app.include_router(clo_router, prefix="/api", tags=['CLO'])
+app.include_router(tlo_router, prefix="/api", tags=['TLO'])
 app.include_router(auth_router, prefix="/auth", tags=['Auth'])
 app.include_router(topic_router, prefix="/api", tags=['TOPIC'])
 app.include_router(faculty_routes, prefix="/api", tags=['Faculty'])
