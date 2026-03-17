@@ -15,7 +15,7 @@ async def create_clo_endpoint(
     return await add_clo(clo_request, db)
 
 @router.get("/clo/{subject_code}")
-async def create_clo_endpoint(
+async def get_clo_endpoint(
     subject_code: str,
     lang_code: str = Depends(get_language),
     db: AsyncSession = Depends(get_db)

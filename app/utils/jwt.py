@@ -37,10 +37,9 @@ def decode_auth_token(auth_token):
         logging.getLogger(__name__).debug(f"Decoded payload: {payload}")
 
         return {
-            'user_id': payload['sub'],
+            'fin_kod': payload['fin_kod'],
             'role': payload['role'],
             'approved': payload['approved'],
-            'is_frozen': payload['is_frozen']
         }
 
     except jwt.ExpiredSignatureError:

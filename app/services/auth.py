@@ -1,4 +1,4 @@
-import random
+import secrets
 from sqlalchemy import select
 from app.models.otp import Otp
 from app.models.auth import Auth
@@ -19,7 +19,7 @@ from app.api.v1.schemas.auth import SignUp, SignIn, ValidateOTP
 templates = Jinja2Templates(directory="template")
 
 def generateOtp(length: int = 6) -> str:
-    otp = ''.join(str(random.randint(0, 9)) for _ in range(length))
+    otp = ''.join(str(secrets.randbelow(10)) for _ in range(length))
     return otp
 
 async def signup(
@@ -193,27 +193,36 @@ async def validate_otp(
                     "message": "User not found"
                 }, status_code=status.HTTP_404_NOT_FOUND
             )
-        
-        hashed_otp = hash_password(credentials.otp)
-        
-        if user.otp_expires_at < datetime.utcnow() or hashed_otp != credentials.otp:
+
+        otp_result = await db.execute(
+            select(Otp)
+            .where(Otp.fin_kod == credentials.fin_kod)
+        )
+
+        otp_record = otp_result.scalar_one_or_none()
+
+        if not otp_record:
+            return JSONResponse(
+                content={
+                    "statusCode": 404,
+                    "message": "OTP not found"
+                }, status_code=status.HTTP_404_NOT_FOUND
+            )
+
+        if otp_record.otp_expires_at < datetime.utcnow() or not verify_password(credentials.otp, otp_record.otp):
             return JSONResponse(
                 content={
                     "statusCode": 401,
                     "message": "Expired otp"
                 }, status_code=status.HTTP_401_UNAUTHORIZED
             )
-        
-        user.otp_validated = True
-        user.otp = None
-        user.otp_expires_at = None
 
+        await db.delete(otp_record)
         await db.commit()
-        await db.refresh(user)
-        
+
         return JSONResponse(
             content={
-                "status_code": 200,
+                "statusCode": 200,
                 "message": "AUTHORIZED"
             }, status_code=status.HTTP_200_OK
         )

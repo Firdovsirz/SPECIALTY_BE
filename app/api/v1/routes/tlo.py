@@ -15,7 +15,7 @@ async def create_tlo_endpoint(
     return await add_tlo(clo_request, db)
 
 @router.get("/tlo/{subject_code}")
-async def create_tlo_endpoint(
+async def get_tlo_endpoint(
     subject_code: str,
     lang_code: str = Depends(get_language),
     db: AsyncSession = Depends(get_db)

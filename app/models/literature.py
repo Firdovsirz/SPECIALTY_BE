@@ -11,9 +11,9 @@ from app.db.database import Base
 class Literature(Base):
     __tablename__ = "literature"
 
-    id =  Column(Integer, primary_key=True, index=True)
-    literature_code = Column(Integer, primary_key=True, nullable=False)
-    specialty_code = Column(Integer, primary_key=True, nullable=False)
+    id = Column(Integer, primary_key=True, index=True)
+    literature_code = Column(Integer, unique=True, nullable=False)
+    specialty_code = Column(Integer, nullable=False)
     url = Column(String,nullable=False)
     created_at = Column(DateTime, nullable=False)
     updated_at = Column(DateTime)
