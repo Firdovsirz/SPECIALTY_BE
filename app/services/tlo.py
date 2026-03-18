@@ -1,6 +1,5 @@
 import random
 from datetime import datetime
-from SPECIALTY_BE.app.api.v1.schemas import tlo
 from app.models.tlo import Tlo
 from app.db.session import get_db
 from fastapi import Depends, status
@@ -104,8 +103,8 @@ async def get_tlo_by_subject_code(
             )
         
         tlo_query = await db.execute(
-            select(tlo)
-            .where(tlo.subject_code == subject_code)
+            select(Tlo)
+            .where(Tlo.subject_code == subject_code)
         )
 
         tlos = tlo_query.scalars().all()
